@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.priceo.dao.productcartDAO">
+
+    <insert id="cartinsertDao">
+        INSERT INTO product_cart (pc_no, pc_count, m_no, p_no)
+        VALUES (product_cart_seq.NEXTVAL, #{pc_count}, #{m_no}, #{p_no})
+    </insert>
+
+    <select id="cartlistDao" resultType="com.priceo.dto.productcartDTO">
+        SELECT 
+            c.pc_no, c.pc_count, c.m_no, c.p_no,
+            p.p_name, p.p_price, p.p_image
+        FROM product_cart c
+        JOIN product p ON c.p_no = p.p_no
+        WHERE c.m_no = #{m_no}
+        ORDER BY c.pc_no DESC
+    </select>
+    
+    <delete id="cartdeleteDao">
+        DELETE FROM product_cart WHERE pc_no = #{pc_no}
+    </delete>
+	
+	<update id="cartupdateDao">
+	    UPDATE product_cart 
+	    SET pc_count = #{pc_count} 
+	    WHERE pc_no = #{pc_no}
+	</update>
+	
+	<select id="checkCartDao" resultType="Integer">
+	    SELECT pc_no FROM product_cart 
+	    WHERE m_no = #{m_no} AND p_no = #{p_no}
+	</select>
+	
+	<update id="updateCartQtyDao">
+	    UPDATE product_cart 
+	    SET pc_count = CASE 
+	        WHEN (pc_count + #{pc_count}) > 5 THEN 5 
+	        ELSE (pc_count + #{pc_count}) 
+	    END
+	    WHERE pc_no = #{pc_no}
+	</update>
+	
+	
+</mapper>

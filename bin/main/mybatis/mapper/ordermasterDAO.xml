@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.priceo.dao.ordermasterDAO">
+<insert id="orderinsertDao" parameterType="com.priceo.dto.ordermasterDTO">
+<selectKey keyProperty="om_no" resultType="int" order="BEFORE"> SELECT order_master_seq.NEXTVAL FROM DUAL </selectKey>
+INSERT INTO order_master ( om_no, m_no, om_name, om_tel, om_addr, om_detail_addr, om_request, om_payno, om_type, om_total ) VALUES ( #{om_no}, #{m_no}, #{om_name, jdbcType=VARCHAR}, #{om_tel, jdbcType=VARCHAR}, #{om_addr, jdbcType=VARCHAR}, #{om_detail_addr, jdbcType=VARCHAR}, #{om_request, jdbcType=VARCHAR}, #{om_payno, jdbcType=VARCHAR}, #{om_type, jdbcType=VARCHAR}, #{om_total} )
+</insert>
+<delete id="cartclearDao"> DELETE FROM product_cart WHERE m_no = #{m_no} </delete>
+<select id="orderlistDao" resultType="map"> SELECT m.om_no, m.om_date, m.om_name, m.om_total, m.om_type, sd.sd_checkin, sd.sd_checkout, (SELECT sr_name FROM stay_room WHERE sr_no = sd.sr_no) as sr_name, COALESCE( sd.sd_bookingstate, (SELECT MAX(pd_state) FROM product_detail WHERE om_no = m.om_no) ) as pd_state FROM order_master m LEFT JOIN stay_detail sd ON m.om_no = sd.om_no WHERE m.m_no = #{m_no} ORDER BY m.om_date DESC </select>
+<insert id="insertProductDetail"> INSERT INTO product_detail (pd_no, pd_count, pd_state, om_no, p_no) VALUES (product_detail_seq.NEXTVAL, #{pd_count}, '결제완료', #{om_no}, #{p_no}) </insert>
+<select id="getOrderDetail" resultType="map"> SELECT m.*, sd.sd_checkin, sd.sd_checkout, sr.sr_name, pd.pd_count, p.p_name, p.p_price, COALESCE(p.p_image, s.s_image) AS P_IMAGE, COALESCE(sd.sd_bookingstate, pd.pd_state) AS PD_STATE FROM order_master m LEFT JOIN stay_detail sd ON m.om_no = sd.om_no LEFT JOIN stay_room sr ON sd.sr_no = sr.sr_no LEFT JOIN stay s ON sr.s_no = s.s_no LEFT JOIN product_detail pd ON m.om_no = pd.om_no LEFT JOIN product p ON pd.p_no = p.p_no WHERE m.om_no = #{om_no} </select>
+<select id="getOrderDetailItems" resultType="com.priceo.dto.productdetailDTO"> SELECT p_no, pd_count FROM product_detail WHERE om_no = #{om_no} </select>
+<update id="updateProductStock"> UPDATE product SET p_count = p_count - #{pd_count} WHERE p_no = #{p_no} AND p_count >= #{pd_count} </update>
+<update id="restoreProductStock"> UPDATE product SET p_count = p_count + #{pd_count} WHERE p_no = #{p_no} </update>
+<update id="updateStayDetailStatus"> UPDATE stay_detail SET sd_bookingstate = #{status} WHERE om_no = #{om_no} </update>
+<update id="updateProductDetailStatus"> UPDATE product_detail SET pd_state = #{status} WHERE om_no = #{om_no} </update>
+<insert id="insertExchange" parameterType="com.priceo.dto.exchangeDTO"> INSERT INTO exchange (e_no, e_reason, e_image, e_state, om_no) VALUES (exchange_seq.NEXTVAL, #{e_reason}, #{e_image}, '교환접수', #{om_no}) </insert>
+<update id="updateOrderForExchange"> UPDATE product_detail SET pd_state = '교환신청' WHERE om_no = #{om_no} </update>
+<select id="selectAllOrders" resultType="map"> SELECT om.om_no AS "om_no", m.m_id AS "m_id", m.m_name AS "m_name", om.om_total AS "om_total", om.om_type AS "om_type", TO_CHAR(om.om_date, 'YYYY-MM-DD HH24:MI') AS "om_date", (SELECT sr.sr_name FROM stay_detail sd JOIN stay_room sr ON sd.sr_no = sr.sr_no WHERE sd.om_no = om.om_no) AS "sr_name", COALESCE( (SELECT sd_bookingstate FROM stay_detail WHERE om_no = om.om_no), (SELECT MAX(pd_state) FROM product_detail WHERE om_no = om.om_no) ) AS "pd_state" FROM order_master om JOIN member m ON om.m_no = m.m_no ORDER BY om.om_no DESC </select>
+<select id="selectAdminOrderDetail" resultType="map"> SELECT om.om_no AS "om_no", om.om_total AS "om_total", om.om_type AS "om_type", TO_CHAR(om.om_date, 'YYYY-MM-DD HH24:MI:SS') as "om_date", om.om_addr AS "om_addr", om.om_detail_addr AS "om_detail_addr", om.om_name AS "receiver_name", om.om_tel AS "om_tel", m.m_id AS "m_id", m.m_name AS "m_name", COALESCE(sd.sd_bookingstate, d.pd_state) AS "pd_state", e.e_reason AS "e_reason", e.e_image AS "e_image", sd.sd_checkin AS "sd_checkin", sd.sd_checkout AS "sd_checkout" FROM order_master om JOIN member m ON om.m_no = m.m_no LEFT JOIN stay_detail sd ON om.om_no = sd.om_no LEFT JOIN (SELECT om_no, MAX(pd_state) as pd_state FROM product_detail GROUP BY om_no) d ON om.om_no = d.om_no LEFT JOIN exchange e ON om.om_no = e.om_no WHERE om.om_no = #{om_no} </select>
+<select id="selectAdminOrderItems" resultType="map"> SELECT pd.p_no AS "p_no", p.p_name AS "p_name", pd.pd_count AS "pd_count", p.p_price AS "p_price", p.p_image AS "p_image", pd.pd_state AS "pd_state" FROM product_detail pd JOIN product p ON pd.p_no = p.p_no WHERE pd.om_no = #{om_no} </select>
+<update id="updateProductState"> {CALL DECLARE BEGIN UPDATE product_detail SET pd_state = #{pd_state} WHERE om_no = #{om_no}; UPDATE stay_detail SET sd_bookingstate = #{pd_state} WHERE om_no = #{om_no}; END } </update>
+</mapper>

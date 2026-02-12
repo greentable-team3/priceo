@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.priceo.dao.reviewDAO">
+
+   <select id="rlistByType" resultType="com.priceo.dto.reviewDTO">
+    SELECT 
+        r.r_no, 
+        r.m_no, 
+        r.r_review, 
+        r.r_score, 
+        r.r_type, 
+        r.r_typeno,
+        m.m_nickname, 
+        p.p_name AS p_name, 
+        s.s_name AS s_name
+    FROM review r
+    JOIN member m ON r.m_no = m.m_no 
+    LEFT JOIN product p ON (r.r_type = 'PRODUCT' AND r.r_typeno = p.p_no)
+    LEFT JOIN stay s ON (r.r_type = 'STAY' AND r.r_typeno = s.s_no)
+    WHERE r.r_typeno = #{r_typeno} 
+      AND r.r_type = #{r_type} 
+    ORDER BY r.r_no ASC
+</select>
+
+    <insert id="rinsertDao" parameterType="com.priceo.dto.reviewDTO">
+       <selectKey keyProperty="r_no" resultType="int" order="BEFORE">
+           SELECT review_seq.NEXTVAL FROM DUAL
+       </selectKey>
+       
+       INSERT INTO review (r_no, r_score, r_typeno, r_type, r_review, m_no)
+       VALUES (#{r_no}, #{r_score}, #{r_typeno}, #{r_type}, #{r_review}, #{m_no})
+   </insert>
+
+    <delete id="rdeleteDao">
+        DELETE FROM review WHERE r_no = #{r_no}
+    </delete>
+
+   <select id="getAllReviews" resultType="map">
+      SELECT 
+          r.r_no, 
+          r.r_review, 
+          r.r_score, 
+          r.r_type, 
+          r.r_typeno, 
+          m.m_id, 
+          m.m_name,   CASE 
+              WHEN r.r_type = 'PRODUCT' THEN (SELECT p_name FROM product WHERE p_no = r.r_typeno)
+              WHEN r.r_type = 'STAY' THEN (SELECT s_name FROM stay WHERE s_no = r.r_typeno)
+          END as item_name
+      FROM review r
+      JOIN member m ON r.m_no = m.m_no
+      ORDER BY r.r_no asc
+   </select>
+   
+   <delete id="deleteReviewsByItem">
+       DELETE FROM review 
+       WHERE r_typeno = #{r_typeno} AND r_type = #{r_type}
+   </delete>
+   
+   <select id="getReviewDetail" resultType="com.priceo.dto.reviewDTO">
+       SELECT * FROM review WHERE r_no = #{r_no}
+   </select>
+   
+   <select id="getListWithPaging" resultType="com.priceo.dto.reviewDTO">
+       SELECT * FROM (
+           SELECT rownum rn, a.* FROM (
+               SELECT r.*, m.m_nickname AS m_name 
+               FROM review r
+               JOIN member m ON r.m_no = m.m_no
+               ORDER BY r.r_no DESC
+           ) a
+       ) WHERE rn BETWEEN #{start} AND #{end}
+   </select>
+   
+   <select id="getTotalCount" resultType="int">
+       SELECT COUNT(*) FROM review
+   </select>
+   
+   <select id="getReviewList" resultType="com.priceo.dto.reviewDTO">
+       SELECT *
+       FROM review
+   </select>
+   
+   <select id="getReviewNosByItem" resultType="int">
+       SELECT r_no 
+       FROM review 
+       WHERE r_typeno = #{no} AND r_type = #{type}
+   </select>
+</mapper>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.priceo.dao.stayRoomDAO">
+
+    <insert id="insertRoom" parameterType="com.priceo.dto.stayRoomDTO">
+        <selectKey keyProperty="sr_no" resultType="int" order="BEFORE">
+            SELECT stay_room_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO stay_room (
+            sr_no, sr_name, sr_people, sr_lowprice, sr_highprice, s_no
+        ) VALUES (
+            #{sr_no}, #{sr_name}, #{sr_people}, #{sr_lowprice}, #{sr_highprice}, #{s_no}
+        )
+    </insert>
+
+    <select id="selectRoomsByStay" parameterType="int" resultType="com.priceo.dto.stayRoomDTO">
+        SELECT sr_no, sr_name, sr_people, sr_lowprice, sr_highprice, s_no
+        FROM stay_room 
+        WHERE s_no = #{s_no} 
+        ORDER BY sr_lowprice ASC
+    </select>
+
+    <delete id="deleteRoom" parameterType="int">
+        DELETE FROM stay_room WHERE sr_no = #{sr_no}
+    </delete>
+    
+    <select id="selectRoomDetail" parameterType="int" resultType="com.priceo.dto.stayRoomDTO">
+    	SELECT * FROM stay_room WHERE sr_no = #{sr_no}
+	</select>
+	
+	<delete id="deleteRoomsByStay" parameterType="int">
+	    DELETE FROM stay_room WHERE s_no = #{s_no}
+	</delete>
+
+</mapper>

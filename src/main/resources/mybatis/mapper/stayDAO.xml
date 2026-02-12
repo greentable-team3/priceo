@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.priceo.dao.stayDAO">
+	<insert id="insertStay" parameterType="com.priceo.dto.stayDTO">
+		<selectKey keyProperty="s_no" resultType="int" order="BEFORE">
+            SELECT stay_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO stay (
+            s_no, s_name, s_addr, s_lat, s_long, 
+            s_view, s_image
+        ) VALUES (
+            #{s_no}, #{s_name}, #{s_addr}, #{s_lat}, #{s_long},
+            0, #{s_image}
+        )
+    </insert>
+
+    <select id="selectStayList" resultType="com.priceo.dto.stayDTO">
+	    SELECT 
+	        s.*, 
+	        (SELECT MIN(sr_lowprice) FROM stay_room sr WHERE sr.s_no = s.s_no) as min_price
+	    FROM stay s
+	    ORDER BY s.s_no asc
+	</select>
+
+    <select id="selectStayDetail" parameterType="int" resultType="com.priceo.dto.stayDTO">
+        SELECT * FROM stay WHERE s_no = #{s_no}
+    </select>
+
+    <update id="updateStay" parameterType="com.priceo.dto.stayDTO">
+        UPDATE stay SET
+            s_image = #{s_image}
+        WHERE s_no = #{s_no}
+    </update>
+
+    <delete id="deleteStay" parameterType="int">
+        DELETE FROM stay WHERE s_no = #{s_no}
+    </delete>
+
+    <update id="updateViewCount" parameterType="int">
+        UPDATE stay SET s_view = s_view + 1 WHERE s_no = #{s_no}
+    </update>
+    
+    <select id="getStayList" resultType="com.priceo.dto.stayDTO">
+       SELECT 
+           s.*, 
+           r.min_price 
+       FROM stay s
+       LEFT JOIN (
+           /* 숙소별 최저가를 미리 계산하는 서브쿼리 */
+           SELECT s_no, MIN(sr_lowprice) as min_price 
+           FROM stay_room 
+           GROUP BY s_no
+       ) r ON s.s_no = r.s_no
+       
+       <choose>
+           <when test="sort == 'price_low'">
+               ORDER BY r.min_price ASC NULLS LAST
+           </when>
+           <when test="sort == 'price_high'">
+               ORDER BY r.min_price DESC NULLS LAST
+           </when>
+           <when test="sort == 'view_desc'">
+              ORDER BY s.s_view DESC
+           </when>
+           <otherwise>
+               ORDER BY s.s_no DESC
+           </otherwise>
+       </choose>
+   </select>
+</mapper>

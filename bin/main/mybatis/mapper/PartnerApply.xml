@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.priceo.dao.PartnerApplyDAO">
+
+    <insert id="insertApply">
+        INSERT INTO partner_apply (
+            pa_no,
+            pa_brand,
+            pa_name,
+            pa_tel,
+            pa_email,
+            pa_type,
+            pa_content,
+            pa_date,
+            pa_state
+        )
+        VALUES (
+            partner_apply_seq.nextval,
+            #{pa_brand},
+            #{pa_name},
+            #{pa_tel},
+            #{pa_email},
+            #{pa_type},
+            #{pa_content},
+            SYSDATE,
+            '접수완료'
+        )
+    </insert>
+    <delete id="deleteApply">
+	    DELETE FROM partner_apply
+	    WHERE pa_no = #{pa_no}
+	</delete>
+    <select id="getAllApply" resultType="com.priceo.dto.PartnerApplyDTO">
+        SELECT *
+        FROM partner_apply
+        ORDER BY pa_date DESC
+    </select>
+    <select id="getApply" resultType="com.priceo.dto.PartnerApplyDTO">
+        SELECT *
+        FROM partner_apply
+	    WHERE pa_no = #{pa_no}        
+    </select>
+	<update id="updateState">
+	    UPDATE partner_apply
+	    SET pa_state = #{pa_state}
+	    WHERE pa_no = #{pa_no}
+	</update>
+
+</mapper>

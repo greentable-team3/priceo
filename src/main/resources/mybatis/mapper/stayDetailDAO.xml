@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.priceo.dao.stayDetailDAO">
+
+    <insert id="insertStayDetail" parameterType="com.priceo.dto.stayDetailDTO">
+	    INSERT INTO stay_detail (
+	        sd_no, sd_name, sd_checkin, sd_checkout, sd_bookingstate, om_no, sr_no
+	    ) VALUES (
+	        stay_detail_seq.NEXTVAL, 
+	        #{sd_name}, 
+	        TO_DATE(#{sd_checkin}, 'YYYY-MM-DD'), 
+	        TO_DATE(#{sd_checkout}, 'YYYY-MM-DD'), -- 퇴실일도 저장!
+	        '예약완료', 
+	        #{om_no}, 
+	        #{sr_no}
+	    )
+	</insert>
+
+    <select id="selectStayDetail" parameterType="int" resultType="com.priceo.dto.stayDetailDTO">
+        SELECT * FROM stay_detail WHERE om_no = #{om_no}
+    </select>
+
+	<delete id="deleteStayDetailByStay" parameterType="int">
+	    DELETE FROM stay_detail 
+	    WHERE sr_no IN (SELECT sr_no FROM stay_room WHERE s_no = #{s_no})
+	</delete>
+	<delete id="deleteStayDetailByRoom" parameterType="int"> 
+		DELETE FROM stay_detail WHERE sr_no = #{sr_no} 
+	</delete>
+</mapper>

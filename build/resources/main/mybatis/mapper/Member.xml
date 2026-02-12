@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.priceo.dao.memberDAO">
+	<!-- 회원가입 -->
+	<insert id="SignupDao">
+		insert into member (m_no,m_id,m_passwd,m_name,m_nickname,m_tel,m_addr,m_email,m_authority)
+		values (member_seq.nextval,#{m_id},#{m_passwd},#{m_name},#{m_nickname},#{m_tel},#{m_addr},#{m_email},#{m_authority})
+	</insert>
+	<!-- 아이디 중복확인 -->
+	<select id="idCheck" parameterType="String" resultType="int">
+	    select count(*) from member where m_id = #{m_id}
+	</select>
+	<select id="getMember" parameterType="int" resultType="com.priceo.dto.memberDTO">
+		SELECT * FROM member WHERE m_no = #{m_no}
+	</select>
+	<select id="listDao" resultType="com.priceo.dto.memberDTO">
+		select * from member
+	</select>
+	<!-- 회원 정보 수정 -->
+	<update id="updateDao">
+		update member set m_name=#{m_name},m_nickname=#{m_nickname},m_passwd=#{m_passwd},m_addr=#{m_addr},m_tel=#{m_tel},m_email=#{m_email}
+		where m_no=#{m_no}
+	</update>
+	<!-- 회원 정보 삭제 -->
+	<delete id="DeleteMemberDao">
+		delete from member where m_no=#{param1}
+	</delete>
+	<!-- 아이디로 회원 정보 조회(아이디 찾기 시 사용) -->
+	<select id="findByMid" resultType="com.priceo.dto.memberDTO">
+		select * from member where m_id=#{m_id}
+	</select>
+	<select id="getMemberByIdDao" resultType="com.priceo.dto.memberDTO">
+		select * from member where m_id = #{m_id}
+	</select>
+	<select id="findAllByEmail" resultType="com.priceo.dto.memberDTO" parameterType="java.lang.String">
+		select * FROM member where m_email = #{m_email}
+	</select>
+	<!-- 비밀번호 재설정 -->
+	<update id="updatePassword">
+		update member SET m_passwd = #{m_passwd} where m_id = #{m_id}
+	</update>
+	<!-- 토큰 저장 -->
+	<update id="saveFcmToken">
+    UPDATE member
+    SET fcm_token = #{fcm_token}
+    WHERE m_no = #{m_no}
+	</update>
+    <!-- FCM 토큰 조회 -->
+    <select id="getFcmToken" resultType="string">
+        SELECT fcm_token
+        FROM member
+        WHERE m_no = #{m_no}
+    </select>
+	<!-- 토큰 제거 (UNREGISTERED) -->
+    <update id="clearFcmToken">
+        UPDATE member
+        SET fcm_token = NULL
+        WHERE m_no = #{m_no}
+    </update>
+	<!-- 관리자 승격 -->
+    <update id="updateAuthority">
+	    UPDATE member
+	    SET m_authority = #{m_authority}
+	    WHERE m_no = #{m_no}
+	</update>
+	<!--  카카오 회원가입  -->
+	<insert id="kakaoSignup" parameterType="com.priceo.dto.memberDTO"> 
+	INSERT INTO member (m_no,m_id,m_passwd,m_name,m_nickname,m_tel,m_addr,m_email,m_authority) 
+	VALUES (member_seq.nextval,#{m_id},'OAUTH2_USER',#{m_name},#{m_nickname},'010-0000-0000','주소미입력',#{m_email},'KAKAO') 
+	</insert>
+	<!--  네이버 회원가입  -->
+	<insert id="naverSignup" parameterType="com.priceo.dto.memberDTO"> 
+	INSERT INTO member (m_no,m_id, m_passwd, m_name, m_nickname, m_email, m_addr, m_tel, m_authority) 
+	VALUES (member_seq.nextval,#{m_id}, #{m_passwd}, #{m_name}, #{m_nickname}, #{m_email}, #{m_addr}, #{m_tel}, #{m_authority}) 
+	</insert>
+</mapper>

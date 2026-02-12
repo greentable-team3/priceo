@@ -1,0 +1,80 @@
+plugins {
+    id 'java'
+    id 'war'
+    id 'org.springframework.boot' version '3.5.9' 
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.price'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+// ⭐ [핵심] 스프링 부트 3.5의 기본 엘라스틱 버전(8.x)을 무시하고 7.10으로 강제 고정
+ext['elasticsearch.version'] = '7.10.1'
+
+configurations.all {
+    resolutionStrategy {
+        // 부트 엔진이 8버전용 클래스를 찾지 못하도록 7버전으로 강제 압수수색
+        force 'org.elasticsearch:elasticsearch:7.10.1'
+        force 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.10.1'
+        force 'org.elasticsearch.client:elasticsearch-rest-client:7.10.1'
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // 1. 기본 라이브러리
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.5'
+    implementation 'org.bgee.log4jdbc-log4j2:log4jdbc-log4j2-jdbc4.1:1.16'
+    implementation 'com.oracle.database.jdbc:ojdbc11'
+
+    // 2. ⭐ [긴급수정] 엘라스틱서치 설정
+    // 부트 3.5는 기본적으로 8버전을 쓰지만, 우리는 7버전용 엔진(4.4.x)을 강제 수혈합니다.
+    implementation 'org.springframework.data:spring-data-elasticsearch:4.4.18' 
+    
+    // 부트 3.5가 억지로 밀어넣는 8버전용 'elasticsearch-java' 엔진(co.elastic.clients)을 완전히 제거
+    implementation ('org.springframework.boot:spring-boot-starter-data-elasticsearch') {
+        exclude group: 'co.elastic.clients', module: 'elasticsearch-java'
+    }
+    
+    // 7.10.1 서버와 통신할 '진짜' 부품들 (상수 에러 방지용)
+    implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.10.1'
+    implementation 'org.elasticsearch:elasticsearch:7.10.1'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.13'
+
+    // 3. 보안 및 유틸 (기존 동일)
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.security:spring-security-crypto'
+    implementation 'jakarta.servlet:jakarta.servlet-api'
+    implementation 'jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api'
+    implementation 'org.glassfish.web:jakarta.servlet.jsp.jstl'
+    implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'com.google.firebase:firebase-admin:9.2.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+eclipse.wtp.facet {
+	facet name: 'jst.web', version: '5.0'
+}
+
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

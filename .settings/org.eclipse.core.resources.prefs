@@ -1,0 +1,6 @@
+eclipse.preferences.version=1
+encoding//src/main/resources/application.properties=UTF-8
+encoding//src/main/webapp/WEB-INF/views/header.jsp=UTF-8
+encoding//src/main/webapp/WEB-INF/views/main.jsp=UTF-8
+encoding//src/main/webapp/WEB-INF/views/user/product/searchResult.jsp=UTF-8
+encoding//src/main/webapp/WEB-INF/views/user/productdetail/productdetail.jsp=UTF-8

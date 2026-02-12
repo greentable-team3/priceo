@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.priceo.dao.stayCalendarDAO">
+
+    <select id="selectRoomCalendar" parameterType="map" resultType="com.priceo.dto.stayCalendarDTO">
+	    SELECT sc_no, sc_date, sc_booking, sr_no 
+	    FROM stay_calendar 
+	    WHERE sr_no = #{sr_no} 
+	      AND sc_date BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') 
+	                      AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+	    ORDER BY sc_date ASC
+	</select>
+
+    <update id="updateBookingStatus" parameterType="map">
+	    UPDATE stay_calendar 
+	    SET sc_booking = 'Y' 
+	    WHERE sr_no = #{sr_no} 
+	      AND TRUNC(sc_date) = TO_DATE(SUBSTR(#{sc_date}, 1, 10), 'YYYY-MM-DD')
+	</update>
+    
+    <update id="restoreBookingStatus" parameterType="map">
+	    UPDATE stay_calendar 
+		SET sc_booking = 'N' 
+		WHERE sr_no = #{sr_no} 
+		  AND TRUNC(sc_date) = TO_DATE(SUBSTR(#{sc_date}, 1, 10), 'YYYY-MM-DD')
+	</update>
+
+	<insert id="insertCalendarDate" parameterType="com.priceo.dto.stayCalendarDTO">
+	    INSERT INTO stay_calendar (
+	        sc_no, sc_date, sc_booking, sr_no
+	    ) VALUES (
+	        stay_calendar_seq.NEXTVAL, #{sc_date}, #{sc_booking}, #{sr_no}
+	    )
+	</insert>
+	
+	<delete id="deleteCalendarByStay" parameterType="int">
+	    DELETE FROM stay_calendar 
+	    WHERE sr_no IN (SELECT sr_no FROM stay_room WHERE s_no = #{s_no})
+	</delete>
+	<delete id="deleteCalendarByRoom"> 
+		DELETE FROM stay_calendar WHERE sr_no = #{sr_no} 
+	</delete>
+</mapper>

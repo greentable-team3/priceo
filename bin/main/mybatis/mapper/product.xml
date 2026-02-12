@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.priceo.dao.productDAO">
+	<select id="plistDao" resultType="com.priceo.dto.productDTO">
+	    SELECT * FROM product 
+	    <where>
+	        <if test="p_category != null and p_category != ''">
+	            p_category = #{p_category}
+	        </if>
+	    </where>
+	    ORDER BY p_category
+	</select>
+
+	<select id="peditDao" resultType="com.priceo.dto.productDTO">
+		select * from product where p_no=#{param1}
+	</select>
+	<select id="pdetailDao" resultType="com.priceo.dto.productDTO">
+	    SELECT * from product WHERE p_no = #{p_no}
+	</select>
+	<update id="pviewUpDao">
+	    UPDATE product SET p_view = p_view + 1 WHERE p_no = #{p_no}
+	</update>
+	
+	<insert id="pinsertDao" parameterType="com.priceo.dto.productDTO">
+	    <selectKey keyProperty="p_no" resultType="int" order="BEFORE">
+	        SELECT product_seq.NEXTVAL FROM DUAL
+	    </selectKey>
+	    
+	    INSERT INTO product (
+	        p_no, 
+	        p_category, 
+	        p_name, 
+	        p_price, 
+	        p_count, 
+	        p_view, 
+	        p_image
+	    ) VALUES (
+	        #{p_no},           #{p_category}, 
+	        #{p_name}, 
+	        #{p_price}, 
+	        #{p_count}, 
+	        0, #{p_image}
+	    )
+	</insert>
+	
+	<update id="pupdateDao">
+		update product set p_price=#{p_price}
+		where p_no=#{p_no}
+	</update>
+	
+	<delete id="pdeleteDao">
+		delete from product where p_no = #{p_no}
+	</delete>
+	
+	<select id="getPopularList" resultType="com.priceo.dto.productDTO">
+	    SELECT * FROM (
+	        SELECT 
+	            p_no, p_name, p_price, p_view, 'PRODUCT' AS type,
+	            p_image AS thumb  -- p_image를 thumb이라는 이름으로 DTO에 전달
+	        FROM product
+	        
+	        UNION ALL
+	    
+	        SELECT 
+	            s.s_no AS p_no, s.s_name AS p_name, room.min_val AS p_price, s.s_view AS p_view, 'STAY' AS type,
+	            s.s_image AS thumb -- s_image를 thumb이라는 이름으로 DTO에 전달
+	        FROM stay s
+	        JOIN (
+	            SELECT s_no, MIN(sr_lowprice) AS min_val FROM stay_room GROUP BY s_no
+	        ) room ON s.s_no = room.s_no
+	        
+	        ORDER BY p_view DESC
+	    ) 
+	    WHERE ROWNUM &lt;= 20
+	</select>
+		<!-- 상품검색 -->
+		<select id="selectByNo" parameterType="int" resultType="com.priceo.dto.productDTO">
+	    SELECT *
+	    FROM product
+	    WHERE p_no = #{p_no}
+	</select>
+
+	<select id="getTotalDataForES" resultType="com.priceo.dto.productDTO">
+	    SELECT 
+	        (type || '_' || p_no) as es_id, -- ⭐ 고유 ID 생성 (PRODUCT_1, STAY_1 등)
+	        p_no, 
+	        p_name, 
+	        p_price, 
+	        p_view, 
+	        type, 
+	        thumb
+	    FROM (
+	        /* 1. 상품 데이터 전체 */
+	        SELECT 
+	            p_no, p_name, p_price, p_view, 
+	            'PRODUCT' AS type, 
+	            p_image AS thumb 
+	        FROM product
+	        
+	        UNION ALL
+	        
+	        /* 2. 숙소 데이터 전체 */
+	        SELECT 
+	            s.s_no AS p_no, s.s_name AS p_name, room.min_val AS p_price, s.s_view AS p_view, 
+	            'STAY' AS type, 
+	            s.s_image AS thumb 
+	        FROM stay s
+	        JOIN (
+	            SELECT s_no, MIN(sr_lowprice) AS min_val FROM stay_room GROUP BY s_no
+	        ) room ON s.s_no = room.s_no
+	    )
+	</select>
+	
+	<select id="getOnlyProductData" resultType="com.priceo.dto.productDTO">
+	    SELECT 
+	        ('PRODUCT_' || p_no) as es_id, 
+	        p_no, 
+	        p_name, 
+	        p_price, 
+	        p_view, 
+	        'PRODUCT' AS type, 
+	        p_image AS thumb 
+	    FROM product
+	</select>
+	
+		<select id="getOnlyStayData" resultType="com.priceo.dto.productDTO">
+	    SELECT 
+	        ('STAY_' || s.s_no) as es_id, 
+	        s.s_no as p_no, 
+	        s.s_name as p_name, 
+	        room.min_val as p_price, 
+	        s.s_view as p_view, 
+	        'STAY' as type, 
+	        s.s_image as thumb 
+	    FROM stay s
+	    JOIN (
+	        SELECT s_no, MIN(sr_lowprice) AS min_val FROM stay_room GROUP BY s_no
+	    ) room ON s.s_no = room.s_no
+	</select>
+	
+	<select id="getProductList" resultType="com.priceo.dto.productDTO">
+       SELECT * FROM product
+       <where>
+           <if test="p_category != null and p_category != ''">
+               AND p_category = #{p_category}
+           </if>
+       </where>
+       
+       <choose>
+           <when test="sort == 'price_low'"> ORDER BY p_price ASC </when>
+           <when test="sort == 'price_high'"> ORDER BY p_price DESC </when>
+           <when test="sort == 'view_desc'"> ORDER BY p_view DESC </when>
+           <otherwise> ORDER BY p_no DESC </otherwise>
+       </choose>
+   	</select>
+</mapper>

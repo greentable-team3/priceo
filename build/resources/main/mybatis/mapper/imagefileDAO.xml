@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.priceo.dao.imagefileDAO">
+
+    <insert id="insertImage" parameterType="com.priceo.dto.imagefileDTO">
+        INSERT INTO imagefile (i_no, i_referenceno, i_referencetype, i_originalfile, i_savefile, i_root)
+        VALUES (imagefile_seq.NEXTVAL, #{i_referenceno}, #{i_referencetype}, #{i_originalfile}, #{i_savefile}, #{i_root})
+    </insert>
+
+    <select id="selectImagesByRef" parameterType="com.priceo.dto.imagefileDTO" resultType="com.priceo.dto.imagefileDTO">
+        SELECT * FROM imagefile 
+        WHERE i_referenceno = #{i_referenceno} 
+          AND i_referencetype = #{i_referencetype}
+        ORDER BY i_no ASC
+    </select>
+
+    <delete id="deleteImagesByRef" parameterType="com.priceo.dto.imagefileDTO">
+        DELETE FROM imagefile 
+        WHERE i_referenceno = #{i_referenceno} 
+          AND i_referencetype = #{i_referencetype}
+    </delete>
+
+</mapper>
